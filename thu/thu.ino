@@ -30,50 +30,52 @@ int joystick[2];  //  Two element array holding the Joystick readings
 
 
 int init_speed=130;
-int max_speed = 120;
+int num = 0;
+char pin_power;
+char directions = 0,last_directions=0;
+unsigned long startMillis ;
+enum m_dir{GO_A_HEAD , LEFT , BACK, RIGHT,STOP};
 
 /*
  * cac ham co ban tien lui , dung , quay trai , phai 
  * su dung de test khi khong dung cac he so PD
 */
-void lui(unsigned long ts){
+void lui(){
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);  
   digitalWrite(in3, HIGH);  
   digitalWrite(in4, LOW);  
   analogWrite(ena, init_speed); 
   analogWrite(enb, init_speed); 
-  delay(ts);
+  
 }
 
-void tien(unsigned long ts){
+void tien(){
   digitalWrite(in1, LOW);
   digitalWrite(in2, HIGH);  
   digitalWrite(in3, LOW);  
   digitalWrite(in4, HIGH); 
   analogWrite(ena, init_speed); 
   analogWrite(enb, init_speed);  
-  delay(ts);
 }
 
-void retrai(unsigned long t){
+void retrai(){
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);  
   digitalWrite(in3, LOW);  
-  digitalWrite(in4, LOW);  
+  digitalWrite(in4, HIGH);  
   analogWrite(ena, init_speed); 
   analogWrite(enb, init_speed); 
-  delay(t);
+
 }
 
-void rephai(unsigned long ts){
+void rephai(){
   digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);  
+  digitalWrite(in2, HIGH);  
   digitalWrite(in3, HIGH);  
   digitalWrite(in4, LOW);  
   analogWrite(ena, init_speed); 
-  analogWrite(enb, init_speed); 
-  delay(ts);
+  analogWrite(enb, init_speed);
 }
 void dung() {
   analogWrite(ena, 0); 
@@ -82,6 +84,7 @@ void dung() {
 /*
   xac dinh gia tri doc duoc tren cac cam bien 
 */
+
 
 void setup()
 {
@@ -107,48 +110,73 @@ void setup()
   radio.openReadingPipe(1,pipe);
   radio.openWritingPipe(pipe);
   radio.startListening();
+  startMillis = millis();
 }
-int num = 0;
-char pin_power;
-char directions = 0;
-enum m_dir{GO_A_HEAD , LEFT , BACK, RIGHT,STOP};
+
 void loop(){
  radio.startListening();
-    delay(50);
-    
+    delay(10);
+
+    for (int i = 0; i< 4; i++) {
     if(radio.available()){
-          
+          startMillis = millis();
     // Reading the data payload until the RX received everything
     bool done = false;
     while (!done)
     {
       // Fetching the data payload
       done = radio.read( &directions, sizeof(directions) );
+      if (directions == last_directions) {
+            directions = STOP;  
+      }
+      else {
+          last_directions = directions;  
+      }
+      if (directions != STOP ){
+        
+        }
       if(directions == GO_A_HEAD) {
-       Serial.println("go a head");
-        tien(1);
+       //Serial.println("go a head");
+        tien();
       }
       else if(directions == LEFT) {
-        Serial.println("LEFT");
-        retrai(1);
+        //Serial.println("LEFT");
+        retrai();
       }
       else if(directions == RIGHT) {
-       Serial.println("RIGHT");
-        rephai(1);
+       //Serial.println("RIGHT");
+        rephai();
       }
       else if(directions == BACK) {
-        Serial.println("BACK");
-        lui(1);
+        //Serial.println("BACK");
+        lui();
+        
       }
       else if(directions == STOP) {
-        Serial.println("stop");
-        dung();
+        //Serial.println("stop");
+        //dung();
         }
     }
     }
+    else{
+   
+        if( millis() - startMillis >= 100){
+         //Serial.println("stop");
+          dung();
+        }
+    }
+        
+    }
     radio.stopListening();
+    delay(10);
     num = analogRead(POWER_PIN);
-    pin_power = (char)(num/10.2);
+    if (num <0 ) 
+      num = 0;
+    else if (num > 710) {
+        num = 710;
+      }
+    pin_power = (char)(num/7.1);
+    //Serial.println((int)pin_power);
         for(int i = 0; i< 2; i++){
          radio.write(&pin_power, sizeof(pin_power));
    

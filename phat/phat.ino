@@ -42,13 +42,14 @@ char directions =11;
 char power ;
 enum m_dir{GO_A_HEAD , LEFT , BACK, RIGHT,STOP};
 char i;
+int last_directions = 11;
 
 
 void loop()   /* Runs Continuously */
 {
    radio.stopListening();
-   delay(50);
- for(i = 0;i < 5; i++) {
+   delay(10);
+ 
    joystick[0] = analogRead(JOYSTICK_X); 
     joystick[1] = analogRead(JOYSTICK_Y); 
   if ( joystick[0] > 700 && joystick[1] > 300 ) 
@@ -61,23 +62,25 @@ void loop()   /* Runs Continuously */
         directions = RIGHT;
       else 
         directions = STOP;
-  radio.write(&directions, sizeof(directions) );
- }
+      if ( directions != last_directions) 
+        for(i = 0;i < 4; i++) {
+          radio.write(&directions, sizeof(directions));
+      }
+     last_directions = directions;
     radio.startListening();
-    delay(50);
+    delay(10);
   if(radio.available())
   {
       bool done = false;
     while (!done)
     {
       // Fetching the data payload
-     
       done = radio.read( &power, sizeof(power) );
       //Serial.println(int(power) );
        //lcd.clear();
       lcd.gotoXY(6, 2); 
-       sprintf(buff,"POWER %d %%",power);
-        lcd.string(buff);
+      sprintf(buff,"POWER %d %%",power);
+      lcd.string(buff);
     }
   }
 
