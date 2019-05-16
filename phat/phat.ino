@@ -17,7 +17,7 @@ Nokia5110 lcd(8, 4, 5, 6,7 ); // (PIN_SCE, PIN_RESET, PIN_DC, PIN_SDIN, PIN_SCLK
 
 unsigned char buff[100];
 
-const uint64_t pipe = 0xE8E8F0F0E1LL; // This is the transmit pipe to communicate the two module
+const uint64_t pipe = 0xE9E8F0F0E1LL; // This is the transmit pipe to communicate the two module
 
 
 /*-----Object Declaration ----*/
@@ -35,12 +35,12 @@ void setup()
   radio.begin();
   radio.openWritingPipe(pipe);
   radio.openReadingPipe(1,pipe);
-   radio.startListening();
+  radio.startListening();
 }//--(end setup )---
 
 char directions =11;
 char power ;
-enum m_dir{GO_A_HEAD , LEFT , BACK, RIGHT};
+enum m_dir{GO_A_HEAD , LEFT , BACK, RIGHT,STOP};
 char i;
 
 
@@ -59,6 +59,8 @@ void loop()   /* Runs Continuously */
         directions = BACK;
       else if ( joystick[0] > 300 && joystick[1] > 700 )
         directions = RIGHT;
+      else 
+        directions = STOP;
   radio.write(&directions, sizeof(directions) );
  }
     radio.startListening();

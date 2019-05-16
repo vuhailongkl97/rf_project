@@ -9,7 +9,7 @@
 #define CE_PIN   9
 #define CSN_PIN 10
  
-const uint64_t pipe = 0xE8E8F0F0E1LL; // This is the transmit pipe to communicate the two module
+const uint64_t pipe = 0xE9E8F0F0E1LL; // This is the transmit pipe to communicate the two module
 
  
 /*-----Object Declaration ----*/
@@ -29,7 +29,7 @@ int joystick[2];  //  Two element array holding the Joystick readings
 #define POWER_PIN A3
 
 
-int init_speed=80;
+int init_speed=130;
 int max_speed = 120;
 
 /*
@@ -37,8 +37,8 @@ int max_speed = 120;
  * su dung de test khi khong dung cac he so PD
 */
 void lui(unsigned long ts){
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);  
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);  
   digitalWrite(in3, HIGH);  
   digitalWrite(in4, LOW);  
   analogWrite(ena, init_speed); 
@@ -47,8 +47,8 @@ void lui(unsigned long ts){
 }
 
 void tien(unsigned long ts){
-  digitalWrite(in1, HIGH);
-  digitalWrite(in2, LOW);  
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);  
   digitalWrite(in3, LOW);  
   digitalWrite(in4, HIGH); 
   analogWrite(ena, init_speed); 
@@ -57,23 +57,27 @@ void tien(unsigned long ts){
 }
 
 void retrai(unsigned long t){
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);  
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);  
   digitalWrite(in3, LOW);  
-  digitalWrite(in4, HIGH);  
+  digitalWrite(in4, LOW);  
   analogWrite(ena, init_speed); 
   analogWrite(enb, init_speed); 
   delay(t);
 }
 
 void rephai(unsigned long ts){
-  digitalWrite(in1, HIGH);
+  digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);  
   digitalWrite(in3, HIGH);  
   digitalWrite(in4, LOW);  
   analogWrite(ena, init_speed); 
   analogWrite(enb, init_speed); 
   delay(ts);
+}
+void dung() {
+  analogWrite(ena, 0); 
+  analogWrite(enb, 0); 
 }
 /*
   xac dinh gia tri doc duoc tren cac cam bien 
@@ -95,22 +99,23 @@ void setup()
   digitalWrite(in2, LOW);  
   digitalWrite(in3, LOW);  
   digitalWrite(in4, HIGH);  
-
+  
   Serial.begin(9600); /* Opening the Serial Communication */
   delay(1000);
   Serial.println("Nrf24L01 Receiver Starting");
   radio.begin();
   radio.openReadingPipe(1,pipe);
-   radio.openWritingPipe(pipe);
+  radio.openWritingPipe(pipe);
   radio.startListening();
 }
 int num = 0;
 char pin_power;
 char directions = 0;
-enum m_dir{GO_A_HEAD , LEFT , BACK, RIGHT};
+enum m_dir{GO_A_HEAD , LEFT , BACK, RIGHT,STOP};
 void loop(){
  radio.startListening();
- delay(50);
+    delay(50);
+    
     if(radio.available()){
           
     // Reading the data payload until the RX received everything
@@ -120,17 +125,25 @@ void loop(){
       // Fetching the data payload
       done = radio.read( &directions, sizeof(directions) );
       if(directions == GO_A_HEAD) {
-        Serial.println("go a head");
+       Serial.println("go a head");
+        tien(1);
       }
       else if(directions == LEFT) {
         Serial.println("LEFT");
+        retrai(1);
       }
       else if(directions == RIGHT) {
-        Serial.println("RIGHT");
+       Serial.println("RIGHT");
+        rephai(1);
       }
       else if(directions == BACK) {
         Serial.println("BACK");
+        lui(1);
       }
+      else if(directions == STOP) {
+        Serial.println("stop");
+        dung();
+        }
     }
     }
     radio.stopListening();
